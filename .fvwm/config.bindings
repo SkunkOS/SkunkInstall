@@ -1,0 +1,268 @@
+# default key/mouse bindings configuration
+################################################################
+
+
+
+# default mouse bindings:
+################################################################
+# Mouse Button Context Modifiers Function
+#              A     any context
+#              R     the root window
+#              W     application window (valid for an undecorated window, too)
+#              D     desktop application (as kdesktop or Nautilus desktop)
+#              T     window title-bar
+#              S     window side, top, or bottom bar (valid for an undecorated window, too)
+#              []-_  left, right, top or bottom side only
+#              F     window frame (the corners)
+#              <^>v  top left, top right, bottom right or bottom left corner
+#              I     icon window
+#              0..9  title-bar buttons 0 through 9
+#                     NOTE: ordering is: 
+#                           13579 T 08642
+#              
+#                     A     any (i.e. always, without active modifier)
+#                     S     shift key
+#                     C     control key
+#                     M     Meta (Alt) key
+#
+##### NOTE: click, double click, hold and motion(drag) is passed to the handling functions
+#
+# DestroyFunc FuncName
+# AddToFunc   FuncName
+# + I (Action to happen immediately)
+# + C (Action to happen on a mouse 'click)
+# + D (Action to happen on a mouse 'double click')
+# + H (Action to happen on a mouse 'hold')
+# + M (Action to happen on a mouse 'motion')
+#
+################################################################
+
+
+# root window:
+################################################################
+Mouse 1	R   	A       Menu menuRoot Nop
+Mouse 2	R    	A      	WindowList
+Mouse 3	R    	A      	Menu menuRootWindows Nop
+
+# window related buttons
+################################################################
+# title bar buttons
+################################################################
+# window button
+Mouse 1	1    	A      	fnTitleBarWinBtn1
+Mouse 2	1    	A      	fnTitleBarWinBtn2
+Mouse 3	1    	A      	fnTitleBarWinBtn3
+# maximize button
+Mouse 1	2    	A     	fnTitleBarMaxBtn1
+Mouse 2	2    	A     	fnTitleBarMaxBtn2
+Mouse 3	2    	A     	fnTitleBarMaxBtn3
+# minimize/iconify button
+Mouse 1	4    	A     	fnTitleBarIconifyBtn1
+Mouse 2	4    	A     	fnTitleBarIconifyBtn2
+Mouse 3	4    	A     	fnTitleBarIconifyBtn3
+# title bar itself
+Mouse 1	T    	A     	fnTitleBarBtn1
+Mouse 2	T    	A     	fnTitleBarBtn2
+Mouse 3	T    	A     	fnTitleBarBtn3
+# border/frame buttons
+################################################################
+# Side frame
+#Mouse 1	S    	[ 	Current Style $n TitleAtLeft
+#Mouse 1	S    	] 	Current Style $n TitleAtRight
+#Mouse 1	S    	- 	Current Style $n TitleAtTop
+#Mouse 1	S    	_ 	Current Style $n TitleAtBottom
+Mouse 1	S    	A 	fnSideFrameBtn1
+Mouse 2	S    	A     	fnSideFrameBtn2
+Mouse 3	S    	A     	fnSideFrameBtn3
+# Corner frame
+Mouse 1	F    	A     	fnCornerFrameBtn1
+Mouse 2	F    	A     	fnCornerFrameBtn2
+Mouse 3	F    	A     	fnCornerFrameBtn3
+
+
+
+# + [ Current Style $n TitleAtLeft
+# + ] Current Style $n TitleAtRight
+# + - Current Style $n TitleAtTop
+# + _ Current Style $n TitleAtBottom
+
+#####
+#
+# DestroyFunc FuncName
+# AddToFunc   FuncName
+# + I (Action to happen immediately)
+# + C (Action to happen on a mouse 'click)
+# + D (Action to happen on a mouse 'double click')
+# + H (Action to happen on a mouse 'hold')
+# + M (Action to happen on a mouse 'motion')
+#
+###########
+
+# window related buttons
+################################################################
+# TITLE BAR BUTTON EVENT HANDLER FUNCTION SECTION
+################################################################
+
+################################################################
+# window button
+################################################################
+DestroyFunc fnTitleBarWinBtn1
+AddToFunc   fnTitleBarWinBtn1
+ + H Nop
+ + M Nop
+ + IC Menu menuWindow Close
+ + D Close
+
+DestroyFunc fnTitleBarWinBtn2
+AddToFunc   fnTitleBarWinBtn2
+ + H Nop
+ + M Nop
+ + IC Menu menuRoot Close
+ + D Close
+
+DestroyFunc fnTitleBarWinBtn3
+AddToFunc   fnTitleBarWinBtn3
+ + H Nop
+ + M Nop
+ + IC Menu menuRootWindows Close
+
+
+################################################################
+# minmax button
+################################################################
+DestroyFunc fnTitleBarMaxBtn1
+AddToFunc   fnTitleBarMaxBtn1
+ + C Maximize $0 $1
+ + D Maximize 100 100
+ + H Nop
+ + M Nop
+DestroyFunc fnTitleBarMaxBtn2
+AddToFunc   fnTitleBarMaxBtn2
+DestroyFunc fnTitleBarMaxBtn3
+AddToFunc   fnTitleBarMaxBtn3
+ + I Current Style $n !Title
+ #+ I Maximize 100 100
+
+ 
+
+ 
+################################################################
+# iconify button
+################################################################
+DestroyFunc fnTitleBarIconifyBtn1
+AddToFunc   fnTitleBarIconifyBtn1
+# + C Iconify
+# + D Iconify
+# + H Nop
+# + M Nop
+ + C Current Style $n !Title
+ + D Iconify
+ + H Nop
+ + M Nop
+DestroyFunc fnTitleBarIconifyBtn2
+AddToFunc   fnTitleBarIconifyBtn2
+DestroyFunc fnTitleBarIconifyBtn3
+AddToFunc   fnTitleBarIconifyBtn3
+# XXX todo: right button shows list of iconified windows 
+
+################################################################
+# title bar "button" itself
+################################################################
+#XXX this doesnt work. why?
+DestroyFunc fnTitleBarBtn1
+AddToFunc   fnTitleBarBtn1
+# XXX shading is delayed... cannot use IC here as strange effect happens
+ + C WindowShade toggle
+ + D Maximize 100 100
+ + H Nop
+ + M Move
+DestroyFunc fnTitleBarBtn2
+AddToFunc   fnTitleBarBtn2
+# + C Iconize
+# + C FvwmWinList
+ + IC WindowList Close
+ + D Nop
+ + H Nop
+ + M Nop
+DestroyFunc fnTitleBarBtn3
+AddToFunc   fnTitleBarBtn3
+ + IC Menu menuRootWindows Nop
+ + D Nop
+ + H Nop
+ + M Nop
+
+
+################################################################
+# border/frame buttons
+################################################################
+
+################################################################
+# Side frame
+################################################################
+DestroyFunc fnSideFrameBtn1
+AddToFunc   fnSideFrameBtn1
+# + [ 	Current Style $n TitleAtLeft
+# + ] 	Current Style $n TitleAtRight
+# + - 	Current Style $n TitleAtTop
+# + _ 	Current Style $n TitleAtBottom
+ + S 	Current Style $n Title
+
+ # + I Raise
+# + C Nop
+# + D Lower
+# + H Nop
+ + M Move
+DestroyFunc fnSideFrameBtn2
+AddToFunc   fnSideFrameBtn2
+DestroyFunc fnSideFrameBtn3
+AddToFunc   fnSideFrameBtn3
+ + I Raise
+# + C Menu menuWindow Close
+ + IC Menu menuRootWindows Nop
+
+################################################################
+# Corner frame
+################################################################
+DestroyFunc fnCornerFrameBtn1
+AddToFunc   fnCornerFrameBtn1
+ + I Raise
+ + C Nop
+ + D Lower
+ + H Nop
+ + M Resize
+DestroyFunc fnCornerFrameBtn2
+AddToFunc   fnCornerFrameBtn2
+DestroyFunc fnCornerFrameBtn3
+AddToFunc   fnCornerFrameBtn3
+ + I Raise
+ + C Menu menuWindow Close
+
+
+################################################################
+# Icons
+################################################################
+#   for other parts of the window/borders/icons:
+Mouse 1	I	A	funcMove-or-Iconify
+Mouse 2	I	A	Iconify
+Mouse 3	I	A	RaiseLower
+
+
+
+# bind functions to function keys
+################################################################
+# Make a screenshot on alt-printscreen:
+PointerKey Print      A    M      Exec exec import -frame $HOME/screenshot.jpg &
+# task window (ctrl-alt-tabbing) 
+Key Tab               A    CM      Next [CurrentDesk !iconic] Focus
+Key Tab               A    CM      Prev [CurrentDesk !iconic] Focus
+# switch tasks forth and back XXX testen
+#Key Next         A       SCM     Next (AcceptsFocus) Focus
+#Key Prior        A       SCM     Prev (AcceptsFocus) Focus
+# XXX this still works somewhat different than intended XXX
+# XXX da muss noch der pager aktualisiert werden - ggf ne Funk machen!
+# switch desktops (here: Ctrl+Alt+Left and +Right)
+PointerKey Left        A CM     GotoDesk -1 0 2
+PointerKey Right       A CM     GotoDesk 1 0 2
+PointerKey Left        A CMS    MoveToDesk -1 0 2
+PointerKey Right       A CMS    MoveToDesk 1 0 2
+

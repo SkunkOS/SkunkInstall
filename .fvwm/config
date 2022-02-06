@@ -1,0 +1,384 @@
+# Module FvwmConsole -g 40x10 -fg black -bg green3
+# FvwmDebug -l ~/fvmdebuglog
+
+# Paths
+################################################################
+# where your images are
+#ImagePath <put your image path here>
+ModulePath /usr/bin:+
+# Themes - START
+################################################################
+# The FvwmTheme setup must be first in the config file, before anything else is done,
+# right after the paths are set.
+#Module FvwmTheme
+ModuleSynchronous Timeout 5 FvwmTheme
+DestroyModuleConfig FvwmTheme: *
+Read $./config.colorsets
+#  Start/Stop Functions:
+################################################################
+# These functions are executed when you enter (Start) and when you leave
+# (Stop) this component. For example, in colors@blackbox they are used to
+# set/unset a good window "transparency" style ParentalRelativity/Opacity;
+# in colors@cde and colors@luthien these functions are used for more things.
+#DestroyFunc FuncFvwmStartColors
+#AddToFunc   FuncFvwmStartColors
+#DestroyFunc FuncFvwmStopColors
+#AddToFunc   FuncFvwmStopColors
+# Themes - END
+
+################################################################
+# default key/mouse bindings:
+################################################################
+Read $./config.bindings
+# Menus
+PipeRead 'perl $FVWM_USERDIR/meow/meow.pl -P'
+Read $./config.menus
+# Basic Functions
+Read $./config.basefns
+
+################################################################
+# Startup Functions
+################################################################
+DestroyFunc StartFunction
+AddToFunc   StartFunction
+ + I Module FvwmTheme
+ + I Module FvwmBanner
+ + I Module FvwmPager 0 2
+ + I Module FvwmAuto 800 -menterleave "Raise" 
+ + I Module FvwmBacker
+
+DestroyFunc InitFunction
+AddToFunc   InitFunction
+ + I Exec exec stalonetray --sticky --window-layer bottom
+ + I Exec exec /usr/home/stefan/Documents/work/wheeloff/turnwheeloff.pl
+ + I Exec exec setxkbmap -option terminate:ctrl_alt_bksp
+ + I Exec exec oneko
+#+ I Exec exec xscreensaver
+#+ I Exec exec fvwm-root -r $[fvwm_wallpapers]/background.png
+
+DestroyFunc RestartFunction
+AddToFunc   RestartFunction
++ I Nop
+
+################################################################
+# General Setup - START
+################################################################
+
+# desktop settings
+################################################################
+DeskTopSize 4x4
+DesktopName 0 Red
+DesktopName 1 Green
+DesktopName 2 Blue
+EdgeResistance 150 10
+EdgeScroll 100 100
+EdgeThickness 1
+ClickTime 750
+MoveThreshold 3
+
+# focus configuration
+################################################################
+Style * 		SloppyFocus, FPGrabFocus
+# Note: FPGrabFocus: New windows should grab focus, fvwm doesn't by default
+ColormapFocus 		FollowsMouse
+
+# various settings
+################################################################
+# This puts the resize/geometry super-mini-window-things in the middle
+#  of the screen rather than the upper-left corner.
+Emulate			Mwm
+
+
+# Styles for various Fvwm components
+################################################################
+Style "*" 		UseDecor meowWindowDecor, \
+			MwmBorder, \
+			Title, \
+			Colorset 1, \
+			HilightColorset 2, \
+			BorderWidth 7, \
+			HandleWidth 7
+Style "*"		Font "-*-luxi sans-medium-r-*-*-*-*-*-*-*-*-iso8859-1"
+Style "*"		IconFont -adobe-times-bold-r-*-*-18-*-*-*-*-*-*-*
+Style "Fvwm*"		!Title,  Sticky, WindowListSkip, \
+			BorderWidth 2, CirculateSkipIcon, CirculateSkip
+Style "FvwmPager"	Sticky, !Title, StaysOnTop, !Iconifiable, \
+			WindowListSkip, CirculateSkipIcon, CirculateSkip
+TitleStyle    		Height 20, \
+			ActiveDown Colorset 2, \
+			ActiveUp Colorset 2, \
+			Inactive Colorset 3
+#MenuStyle "*"		MenuColorset 3, ActiveColorset 4, GreyedColorset 5,
+MenuStyle "*"		MenuColorset 37, ActiveColorset 38, GreyedColorset 39, \
+			Font "-*-luxi sans-medium-r-*-*-*-*-*-*-*-*-iso8859-1"
+#			Font -adobe-times-bold-r-*-*-10-*-*-*-*-*-*-*, \
+#			Font "xft:Arial:regular:pixelsize=14:antialias=True"
+#*IOStuff:     Colorset 4
+
+# Styles for various programs
+################################################################
+#Style "stalonetray" !Title
+#Style "trayer" !Title
+# see bug n#51188
+# Style   "OpenOffice*"   NoPPosition, RandomPlacement, EWMHIgnoreStrutHints, EWMHMaximizeIgnoreWorkingArea, EWMHPlacementIgnoreWorkingArea, IgnoreGravity
+
+
+# set up our non-default window decor (title bar, font etc)
+################################################################
+DestroyDecor meowWindowDecor
+AddToDecor   meowWindowDecor
+# this does NOT! work as + I TitleStyle Height 20
++ TitleStyle Height 20
+# background for window title, buttons and border
+DestroyDecor meowWindowDecorTitleOff
+AddToDecor   meowWindowDecorTitleOff
+# this does NOT! work as + I TitleStyle Height 20
++ TitleStyle Height 100
+# background for window title, buttons and border
+DestroyFunc FuncFvwmDecorBackground
+AddToFunc   FuncFvwmDecorBackground
+
+################################################################
+# General Setup - END
+################################################################
+
+
+################################################################
+# Module configs- BEGIN
+################################################################
+
+# FvwmPager module
+################################################################
+*FvwmPager: BalloonColorset * 16
+*FvwmPager: HilightColorset * 15
+*FvwmPager: WindowColorsets 1 2
+*FvwmPager: DeskColor 0 rgb:70/60/60
+*FvwmPager: DeskColor 1 rgb:60/70/60
+*FvwmPager: DeskColor 2 rgb:60/60/70
+*FvwmPager: Font none
+*FvwmPager: SmallFont none
+*FvwmPager: MiniIcons
+*FvwmPager: Window3dBorders
+*FvwmPager: UseSkipList
+*FvwmPager: Geometry 288x54-50-50
+*FvwmPager: Balloons            All
+*FvwmPager: BalloonFont	    "xft:Arial:regular:pixelsize=12:antialias=True"
+*FvwmPager: BalloonYOffset      +7
+*FvwmPager: BalloonBorderWidth  1
+
+# FvwmIdent module
+################################################################
+*FvwmIdent: Back MidnightBlue
+*FvwmIdent: Fore Yellow
+*FvwmIdent: Font -adobe-helvetica-medium-r-*-*-12-*-*-*-*-*-*-*
+
+# FvwmBacker module
+################################################################
+*FvwmBacker: Command (Desk 0, Page 0 0) -solid rgb:00/70/00
+*FvwmBacker: Command (Desk 0, Page 1 0) -solid rgb:00/95/00
+*FvwmBacker: Command (Desk 0, Page 2 0) -solid rgb:00/B8/00
+*FvwmBacker: Command (Desk 0, Page 3 0) -solid rgb:00/D4/00
+*FvwmBacker: Command (Desk 0, Page 4 0) -solid rgb:00/E8/00
+*FvwmBacker: Command (Desk 0, Page 0 1) -solid rgb:40/70/00
+*FvwmBacker: Command (Desk 0, Page 1 1) -solid rgb:40/95/00
+*FvwmBacker: Command (Desk 0, Page 2 1) -solid rgb:40/B8/00
+*FvwmBacker: Command (Desk 0, Page 3 1) -solid rgb:40/D4/00
+*FvwmBacker: Command (Desk 0, Page 4 1) -solid rgb:40/E8/00
+*FvwmBacker: Command (Desk 0, Page 0 2) -solid rgb:80/70/00
+*FvwmBacker: Command (Desk 0, Page 1 2) -solid rgb:80/95/00
+*FvwmBacker: Command (Desk 0, Page 2 2) -solid rgb:80/B8/00
+*FvwmBacker: Command (Desk 0, Page 3 2) -solid rgb:80/D4/00
+*FvwmBacker: Command (Desk 0, Page 4 2) -solid rgb:80/E8/00
+*FvwmBacker: Command (Desk 0, Page 0 3) -solid rgb:A0/70/00
+*FvwmBacker: Command (Desk 0, Page 1 3) -solid rgb:A0/95/00
+*FvwmBacker: Command (Desk 0, Page 2 3) -solid rgb:A0/B8/00
+*FvwmBacker: Command (Desk 0, Page 3 3) -solid rgb:A0/D4/00
+*FvwmBacker: Command (Desk 0, Page 4 3) -solid rgb:A0/E8/00
+*FvwmBacker: Command (Desk 0, Page 0 4) -solid rgb:E0/70/00
+*FvwmBacker: Command (Desk 0, Page 1 4) -solid rgb:E0/95/00
+*FvwmBacker: Command (Desk 0, Page 2 4) -solid rgb:E0/B8/00
+*FvwmBacker: Command (Desk 0, Page 3 4) -solid rgb:E0/D4/00
+*FvwmBacker: Command (Desk 0, Page 4 4) -solid rgb:E0/E8/00
+*FvwmBacker: Command (Desk 1, Page 0 0) -solid rgb:00/70/00
+*FvwmBacker: Command (Desk 1, Page 1 0) -solid rgb:00/95/00
+*FvwmBacker: Command (Desk 1, Page 2 0) -solid rgb:00/B8/00
+*FvwmBacker: Command (Desk 1, Page 3 0) -solid rgb:00/D4/00
+*FvwmBacker: Command (Desk 1, Page 4 0) -solid rgb:00/E8/00
+*FvwmBacker: Command (Desk 1, Page 0 1) -solid rgb:40/70/00
+*FvwmBacker: Command (Desk 1, Page 1 1) -solid rgb:40/95/00
+*FvwmBacker: Command (Desk 1, Page 2 1) -solid rgb:40/B8/00
+*FvwmBacker: Command (Desk 1, Page 3 1) -solid rgb:40/D4/00
+*FvwmBacker: Command (Desk 1, Page 4 1) -solid rgb:40/E8/00
+*FvwmBacker: Command (Desk 1, Page 0 2) -solid rgb:80/70/00
+*FvwmBacker: Command (Desk 1, Page 1 2) -solid rgb:80/95/00
+*FvwmBacker: Command (Desk 1, Page 2 2) -solid rgb:80/B8/00
+*FvwmBacker: Command (Desk 1, Page 3 2) -solid rgb:80/D4/00
+*FvwmBacker: Command (Desk 1, Page 4 2) -solid rgb:80/E8/00
+*FvwmBacker: Command (Desk 1, Page 0 3) -solid rgb:A0/70/00
+*FvwmBacker: Command (Desk 1, Page 1 3) -solid rgb:A0/95/00
+*FvwmBacker: Command (Desk 1, Page 2 3) -solid rgb:A0/B8/00
+*FvwmBacker: Command (Desk 1, Page 3 3) -solid rgb:A0/D4/00
+*FvwmBacker: Command (Desk 1, Page 4 3) -solid rgb:A0/E8/00
+*FvwmBacker: Command (Desk 1, Page 0 4) -solid rgb:E0/70/00
+*FvwmBacker: Command (Desk 1, Page 1 4) -solid rgb:E0/95/00
+*FvwmBacker: Command (Desk 1, Page 2 4) -solid rgb:E0/B8/00
+*FvwmBacker: Command (Desk 1, Page 3 4) -solid rgb:E0/D4/00
+*FvwmBacker: Command (Desk 1, Page 4 4) -solid rgb:E0/E8/00
+*FvwmBacker: Command (Desk 2, Page 0 0) -solid rgb:00/70/00
+*FvwmBacker: Command (Desk 2, Page 1 0) -solid rgb:00/95/00
+*FvwmBacker: Command (Desk 2, Page 2 0) -solid rgb:00/B8/00
+*FvwmBacker: Command (Desk 2, Page 3 0) -solid rgb:00/D4/00
+*FvwmBacker: Command (Desk 2, Page 4 0) -solid rgb:00/E8/00
+*FvwmBacker: Command (Desk 2, Page 0 1) -solid rgb:40/70/00
+*FvwmBacker: Command (Desk 2, Page 1 1) -solid rgb:40/95/00
+*FvwmBacker: Command (Desk 2, Page 2 1) -solid rgb:40/B8/00
+*FvwmBacker: Command (Desk 2, Page 3 1) -solid rgb:40/D4/00
+*FvwmBacker: Command (Desk 2, Page 4 1) -solid rgb:40/E8/00
+*FvwmBacker: Command (Desk 2, Page 0 2) -solid rgb:80/70/00
+*FvwmBacker: Command (Desk 2, Page 1 2) -solid rgb:80/95/00
+*FvwmBacker: Command (Desk 2, Page 2 2) -solid rgb:80/B8/00
+*FvwmBacker: Command (Desk 2, Page 3 2) -solid rgb:80/D4/00
+*FvwmBacker: Command (Desk 2, Page 4 2) -solid rgb:80/E8/00
+*FvwmBacker: Command (Desk 2, Page 0 3) -solid rgb:A0/70/00
+*FvwmBacker: Command (Desk 2, Page 1 3) -solid rgb:A0/95/00
+*FvwmBacker: Command (Desk 2, Page 2 3) -solid rgb:A0/B8/00
+*FvwmBacker: Command (Desk 2, Page 3 3) -solid rgb:A0/D4/00
+*FvwmBacker: Command (Desk 2, Page 4 3) -solid rgb:A0/E8/00
+*FvwmBacker: Command (Desk 2, Page 0 4) -solid rgb:E0/70/00
+*FvwmBacker: Command (Desk 2, Page 1 4) -solid rgb:E0/95/00
+*FvwmBacker: Command (Desk 2, Page 2 4) -solid rgb:E0/B8/00
+*FvwmBacker: Command (Desk 2, Page 3 4) -solid rgb:E0/D4/00
+*FvwmBacker: Command (Desk 2, Page 4 4) -solid rgb:E0/E8/00
+
+# FvwmWinList module
+################################################################
+# *FvwmWinList: Colorset 17
+# *FvwmWinList: FocusColorset 18
+# *FvwmWinList: IconColorset 19
+# *FvwmWinList: Font -adobe-helvetica-bold-r-*-*-10-*-*-*-*-*-*-*
+# #*FvwmWinList: Action Click1 Iconify -1,Focus
+# #*FvwmWinList: Action Click2 Iconify
+# #*FvwmWinList: Action Click3 Module "FvwmIdent" FvwmIdent
+# *FvwmWinList: Action Click1 FuncFvwmDeiconifyFocusAndRaise
+# *FvwmWinList: Action Click2 Iconify
+# *FvwmWinList: Action Click3 Popup MenuFvwmWindowOps2 Mouse -102m c
+# *FvwmWinList: UseSkipList
+# *FvwmWinList: Geometry +0-1
+# *FvwmWinList: MaxWidth 700
+# *FvwmWinList: MinWidth 150
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# FvwmBanner module
+################################################################
+*FvwmBanner: Pixmap fvwm3.xpm
+*FvwmBanner: Timeout 2
+
+
+################################################################
+# Module configs- END
+################################################################
+
+
+
+
+
+################################################################
+# dialog forms - BEGIN
+################################################################
+
+# FvwmForm alias - query exit ala mwm
+################################################################
+*QuitVerify: GrabServer
+*QuitVerify: WarpPointer
+*QuitVerify: Font          *helvetica*m*r*n*14*
+#*QuitVerify: ButtonFont    *helvetica*m*o*n*14*
+*QuitVerify: ButtonFont    7x13bold
+# colorsets einsetzen! XXXX
+*QuitVerify: Fore          Black
+*QuitVerify: Back          Light Gray
+*QuitVerify: ItemFore Wheat
+*QuitVerify: ItemBack Gray50
+# begin items
+*QuitVerify: Line          center
+*QuitVerify: Text          "Do you really want to exit fvwm?"
+*QuitVerify: Line          expand
+*QuitVerify: Button   quit      " Exit "
+*QuitVerify: Command  Quit
+*QuitVerify: Button   quit      "Cancel"
+*QuitVerify: Command  Nop
+
+# MyTalk & MyFvwmTalk from Dave Goldberg
+# MyTalk Form - dissappears after use
+################################################################
+*MyTalk: WarpPointer
+*MyTalk: Font *helvetica*m*r*n*14*
+*MyTalk: ButtonFont *helvetica*m*o*n*14*
+*MyTalk: InputFont *cour*m*r*n*14*
+*MyTalk: Fore Red
+*MyTalk: Back Gray
+*MyTalk: ItemFore Blue
+*MyTalk: ItemBack Gray
+*MyTalk: Line center
+*MyTalk: Text "Fvwm Function"
+*MyTalk: Input Func 40 ""
+*MyTalk: Line expand
+*MyTalk: Button quit "Run" ^M
+*MyTalk: Command $(Func)
+*MyTalk: Button restart "Clear" ^R
+*MyTalk: Button quit "Cancel" ^C
+*MyTalk: Command Nop
+
+# MyFvwmTalk Form - sticks around
+################################################################
+*MyFvwmTalk: WarpPointer
+*MyFvwmTalk: Font *helvetica*m*r*n*14*
+*MyFvwmTalk: ButtonFont *helvetica*m*o*n*14*
+*MyFvwmTalk: InputFont *cour*m*r*n*14*
+*MyFvwmTalk: Fore Red
+*MyFvwmTalk: Back Gray
+*MyFvwmTalk: ItemFore Blue
+*MyFvwmTalk: ItemBack Gray
+*MyFvwmTalk: Line center
+*MyFvwmTalk: Text "Fvwm Function"
+*MyFvwmTalk: Input Func 40 ""
+*MyFvwmTalk: Line expand
+*MyFvwmTalk: Button restart "Run" ^M
+*MyFvwmTalk: Command $(Func)
+*MyFvwmTalk: Button restart "Clear" ^R
+*MyFvwmTalk: Command Nop
+*MyFvwmTalk: Button restart "Iconify" ^Z
+*MyFvwmTalk: Command Next [MyFvwmTalk] Iconify
+*MyFvwmTalk: Button quit "Quit" ^C
+*MyFvwmTalk: Command Nop
+
+
+################################################################
+# dialog forms - BEGIN
+################################################################
+
+
+
+# Prevent xchat from focusing windows when someone says my nick
+# (thanks to nev):
+#DestroyFunc UrgencyFunc
+
+# Fvwm Scrollbars XXX do we need them at all?
+################################################################
+*FvwmScroll: Back grey40
+*FvwmScroll: Fore green
+

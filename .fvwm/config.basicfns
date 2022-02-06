@@ -1,0 +1,50 @@
+#####
+#
+# DestroyFunc FuncName
+# AddToFunc   FuncName
+# + I (Action to happen immediately)
+# + C (Action to happen on a mouse 'click)
+# + D (Action to happen on a mouse 'double click')
+# + H (Action to happen on a mouse 'hold')
+# + M (Action to happen on a mouse 'motion')
+#
+###########
+
+# Basic Functions
+################################################################
+
+
+
+DestroyFunc funcMaximize
+AddToFunc funcMaximize		I Maximize
+
+DestroyFunc funcMove-or-Raise
+AddToFunc funcMove-or-Raise		I Raise
++				M Move
++  				D Lower
+
+DestroyFunc funcMove-or-Iconify
+AddToFunc funcMove-or-Iconify	I Raise
++				M Move
++				D Iconify
+
+DestroyFunc Resize-or-Raise
+AddToFunc Resize-or-Raise	I Raise
++				M Resize
++				D Lower
+
+DestroyFunc PrintFunction
+AddToFunc PrintFunction		I Raise
++				I Exec xdpr -id $w
+
+DestroyFunc PrintReverseFunction
+AddToFunc PrintReverseFunction  I Raise
++                               I Exec xdpr 1/2 -h -rv -id $w
+
+
+# XXX auf titelzeile anwenden!
+#DestroyFunc FvwmWindowShade
+#AddToFunc   FvwmWindowShade
+#+ D WindowShade $0
+
+

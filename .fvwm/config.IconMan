@@ -1,0 +1,54 @@
+# 		Name            Description                Default
+
+#*FvwmIconMan: NumManagers     1	# number of managers         1
+# *FvwmIconMan: Action          binds command to event     Mouse 0 N sendcommand Iconify
+*FvwmIconMan: Background      default background         gray
+# *FvwmIconMan: ButtonGeometry  size of button in pixels
+# *FvwmIconMan: Colorset        default colorset
+# *FvwmIconMan: DontShow        list of windows to ignore
+*FvwmIconMan: DrawIcons       true	# use mini icons             false
+*FvwmIconMan: FocusAndSelectButton                       flat grey black
+# *FvwmIconMan: FocusAndSelectColorset
+# *FvwmIconMan: FocusButton     style for focused buttons  up grey black
+# *FvwmIconMan: FocusColorset
+*FvwmIconMan: FollowFocus     TRUE	# show which win has focus   false
+*FvwmIconMan: Font            Font -adobe-helvetica-bold-r-*-*-10-*-*-*-*-*-*-*             #             8x13
+*FvwmIconMan: Foreground      black		# default text color         white
+*FvwmIconMan: Format          "%c: %i"describes button label     "%c: %i"
+*FvwmIconMan: IconName        FvwmIconMan       # manager icon name          FvwmIconMan
+*FvwmIconMan: IconAndSelectButton                        up black grey
+# *FvwmIconMan: IconAndSelectColorset
+# *FvwmIconMan: IconButton      style for icon buttons     up black grey
+# *FvwmIconMan: IconColorset
+# *FvwmIconMan: ManagerGeometry size of manager in buttons 0x1
+# *FvwmIconMan: MaxButtonWidth  max width of a button
+# *FvwmIconMan: MaxButtonWidthByColumns
+# *FvwmIconMan: NoIconAction    animate iconification      NOP
+# *FvwmIconMan: PlainButton     style for normal buttons   up black grey
+# *FvwmIconMan: PlainColorset
+# *FvwmIconMan: ReliefThickness size of button relief      2
+# *FvwmIconMan: Resolution      global/desk/page/screen    page
+# *FvwmIconMan: Reverse         normal, icon or none       none
+# *FvwmIconMan: SelectButton    style for selected buttons flat black grey
+# *FvwmIconMan: SelectColorset
+# *FvwmIconMan: Shape           use shape extension        false
+# *FvwmIconMan: Show            list of windows to show
+# *FvwmIconMan: ShowOnlyIcons   only icons visible         false
+# *FvwmIconMan: ShowNoIcons     icons are not displayed    false
+*FvwmIconMan: ShowTransient   true		# transient windows visible  false
+# *FvwmIconMan: ShowOnlyFocused only focused visible       false
+# *FvwmIconMan: Sort            keep managers sorted       name
+# *FvwmIconMan: SortWeight      weight for sorting
+# *FvwmIconMan: Tips            Tool Tips mode             none
+# *FvwmIconMan: TipsDelays      Tool Tips mapping delays   1000 300
+# *FvwmIconMan: TipsFont        Font for Tool Tips         default fvwm font
+# *FvwmIconMan: TipsColorset    Tool Tips Colorset         0
+# *FvwmIconMan: TipsFormat      describes Tips label       the Format value
+# *FvwmIconMan: TipsBorderWidth Tool Tips border size      1
+# *FvwmIconMan: TipsPlacement   Tips placement vs button   updown
+# *FvwmIconMan: TipsJustification Tips Just vs button      leftup
+# *FvwmIconMan: TipsOffsets     Tips placement Offsets     3 2
+# *FvwmIconMan: Title           manager title              FvwmIconMan
+# *FvwmIconMan: TitleButton     style for title button     raisededge black grey
+# *FvwmIconMan: TitleColorset
+# *FvwmIconMan: UseWinList      honor WinListSkip?         true

@@ -1,0 +1,177 @@
+# Menus
+################################################################
+
+#PipeRead '$FVWM_USERDIR/meow/meow.pl -P'
+
+
+AddToMenu menuSystem
++                       "Utilities"     	Popup menuUtilities
+#+ 			"TestApps"		Popup meowRoot
++			""			Nop
++                       "Feline"     		Popup Fvwm-Popup
+
+AddToMenu Fvwm-Popup    "Feline" Title
++                       "Tile Windows"            FvwmRearrange -tile -h 10 10 90 90
++                       "Cascade Windows"         FvwmRearrange -cascade -resize 10 2 80 70
++                       "Fvwm Modules"            Popup Module-Popup
++                       ""              Nop
++                       "Refresh Screen"   Refresh
++                       "Recapture Screen" Recapture
++                       ""              Nop
++                       "Exit Fvwm"     Popup menuQuitVerify
+
+
+# root window context menu (right button)
+################################################################
+AddToMenu menuRootWindowsFVWM
++                       "Configure"      	Popup 
+
+#+                       "Talk"          	Module  FvwmTalk
+#+                       "Obey"  		Module 	FvwmForm MyFvwmTalk
+#+                       "Form - Rlogin"      	Module FvwmForm Rlogin
+#+			"WinList"		WindowList
++			"FvwmIdent"		Module FvwmIdent
++			"FvwmConsole"		Module FvwmConsole
++                       "Restart Fvwm"  	Restart
+
+AddToMenu menuRootWindowsSystem
++                       "Switch User"  		Popup menuRootWindowsSystemSwitchUser
++                       "Logout"  		Popup menuRootWindowsSystemLogout
++                       "Sleep"  		Popup menuRootWindowsSystemHibernate
++                       "Hibernate"  		Popup menuRootWindowsSystemHibernate
++                       "Shut down"  		Popup menuRootWindowsSystemShutdown
+
+
+
+AddToMenu menuRootWindowsScreenCapture
++                       "Window " 	Popup menuRootWindows
++                       "Area " 	Popup menuRootWindows
++                       "Full screen " 	Popup menuRootWindows
+
+#AddToMenu menuRootWindowsScreenCapture
+#+                       "Still" 	Popup menuRootWindows
+#+                       "Moved " 	Popup menuRootWindows
+
+AddToMenu menuRootWindows
++			"menuSystem"		Popup menuSystem
++			"Window Ops"		Popup menuWindowOps
++                       "Screen Capture " 	Popup menuRootWindowsScreenCapture
++                       "Start Menu" 		Popup menuRoot
++                       "FVWM" 			Popup menuRootWindowsFVWM
++                       "System" 		Popup menuRootWindowsSystem
+#+                       "Hibernate"  		Exec exec xterm -e sudo pm-hibernate
+
+#+			"Window Ops"		Popup menuWindowOps
+#+                       "Screen Capture " 	Popup menuRootWindowsScreenCapture
+#+                       "Start Menu" 		Popup menuRoot
+#+                       "FVWM" 			Popup menuRootWindowsFVWM
+#+                       "System" 		Popup menuRootWindowsSystem
+#+                       "Hibernate"  		Exec exec xterm -e sudo pm-hibernate
+
+
+
+
+# maximize button menu (title bar)
+################################################################
+AddToMenu menuTitleBarMaxBtn
++                       "Maximize" 		Maximize
++                       "Maximize Vertically" 	Maximize 0 100
++                       "Maximize Horizontally" Maximize 100 0
++                       "Restore"      		Maximize $0 $1
++                       "Shade"      		WindowShade True
++                       "Unshade"      		WindowShade False
++                       "Iconify"      		Iconify
+
+AddToMenu menuUtilities     "Utilities" Title
++			"XTerm"		Exec exec xterm
++			"Konsole"		Exec exec konsole
++			"Firefox"		Exec exec firefox
++                       "Settings"      settings_popup
++                       "Identify"      	Module  FvwmIdent
++                       "Reset X defaults" Exec xrdb -load $HOME/.Xdefaults
+
++			""		Nop
+
+AddToMenu menuWindowOpsTitleBar
++		 	"Title on"	Current Style $n Title
++		 	"Title off"	Current Style $n !Title
++		 	"Title top"	Current Style $n TitleAtTop
++		 	"Title bottom"	Current Style $n TitleAtBottom
++		 	"Title left"	Current Style $n TitleAtLeft
++		 	"Title right"	Current Style $n TitleAtRight
+#+		 	"Title left"	UseDecor meowWindowDecorTitleOff
+TitleAtBottom
+AddToMenu menuWindowOps
+#+			"Window Ops"	Title
++			"Move"		Move
++			"Resize"	Resize
+#+			"Raise"		Raise
+#+			"Lower"		Lower
++                       "Shade on/off"  WindowShade Toggle
++			"(Un)Stick"	Stick
++			"(Un)Maximize"	Maximize
++		 	"Title Bar"	Popup menuWindowOpsTitleBar
++		 	"(De)Iconify"	Iconify
++			""		Nop
++			"Delete"	Delete
++			"Close"		Close
++			"Destroy"	Destroy
++			""		Nop
++			"Identify"	Module  FvwmIdent
++			"Refresh"	RefreshWindow
+
+AddToMenu menuWindow	
++			"Move"		Move
++			"(Un)&Stick"	Stick
++			"Refresh Window" RefreshWindow
++			""		Nop
++			"ScrollBar" 	Module FvwmScroll 2 2
++			"Print"         PrintFunction
++                       "Print Reverse" PrintReverseFunction
++			""		Nop
++			"&Delete"	Delete
++			"&Close"	Close
++			"Destroy"	Destroy
+
+AddToMenu menuQuitVerify 	"Really Quit Fvwm?" Title
++		      	""		    Nop
++                       "Restart Fvwm"      Restart
++		      	""		    Nop
++		      	""		    Nop
++		      	"Yes, Really Quit"  Quit
+
+
+# settings menus etc
+#####################################
+ 
+AddToMenu settings_kbdclick_popup "Keyboardclicks"   Title
+ + "hard"		Exec exec xset c 100
+ + "Off"		Exec exec xset c off
+ + "soft"		Exec exec xset c on
+
+AddToMenu settings_mouse_popup "Mouse"   Title
+ + "fast"		Exec exec xset m 4 2
+ + "Left handed mouse"	Exec exec xmodmap -e
+ + "normal"		Exec exec xset m 2 5
+ + "slow"		Exec exec xset m 1 1
+
+AddToMenu settings_speaker_popup "Speaker"   Title
+ + "loud"		Exec exec xset b  100 600 50
+ + "normal"		Exec exec xset b on
+ + "loud and long"	Exec exec xset b 100 600 300
+ + "Off"		Exec exec xset b off
+
+AddToMenu screen_popup "Screensaver"   Title
+ + "Blank"		Exec exec xset s blank
+ + "Off"		Exec exec xset s off
+ + "Pattern after 5 min"		 Exec exec xset s noblank s 300 300
+ + "Immediately"	Exec exec xset s activate
+ + "Default"		Exec exec xset s default
+
+AddToMenu settings_popup "Settings"   Title
+ + "Keyboardclicks"	Popup settings_kbdclick_popup 
+ + "Mouse"		Popup settings_mouse_popup 
+ + "Speaker"		Popup settings_speaker_popup 
+ + "Screensaver"	Popup screen_popup 
+ 
+

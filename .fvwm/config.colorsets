@@ -1,0 +1,117 @@
+
+#   Colorset | Meaning                    | used for
+#          0 | default                    | Default colors: feedback windows (like geometry window and NoteMessage) and FvwmScroll
+#XXX*FvwmTheme: Colorset 39
+*FvwmTheme: Colorset 0 fg black, bg rgb:A0/60/A0
+#          1 | inactive window            | window/icon titles, windows in Pager
+*FvwmTheme: Colorset 1 fg black, bg rgb:88/88/88, Plain, NoShape
+#          2 | active window              | window/icon titles, windows in Pager
+*FvwmTheme: Colorset 2 fg black, bg rgb:BB/BB/BB, Plain, NoShape
+#          3 | inactive borders           | window borders (may copy 1)
+*FvwmTheme: Colorset 3 fg black, bg rgb:66/66/00, Plain, NoShape
+#          4 | active borders             | window borders (may copy 2)
+*FvwmTheme: Colorset 4 fg black, bg rgb:99/99/99, Plain, NoShape
+#          5 |                            | unused atm
+*FvwmTheme: Colorset 5 fg black, bg rgb:80/98/B0, Plain, NoShape
+#          6 | active menu item           | menu/module foreground and background (only bg/fg used!)
+*FvwmTheme: Colorset 6 fg black, bg rgb:90/A9/C2, Plain, NoShape
+#          7 | greyed menu item           | greyed menu items (only fg used), hilight colors
+*FvwmTheme: Colorset 7 fg grey48, bg grey48, Plain, NoShape
+#          8 | reserved                   | for the fvwm-themes future use
+#Colorset 8 
+#          9 | reserved                   | for the fvwm-themes future use
+#Colorset 9 
+
+# default for modules
+# For FvwmButtons, FvwmPager, can be also used for FvwmIconMan, FvwmIconBox.
+#         10 | modules, default           | Button Bar, Pager, other modules
+*FvwmTheme: Colorset 10 fg black, bg rgb:80/A0/A0, Plain, NoShape
+# default hilight for modules
+# For hilighting a part of a button bar (some swallowed apps for example).
+#         11 | modules, default hilight   | Button Bar
+*FvwmTheme: Colorset 11 fg black, bg white, Plain, NoShape
+# special or funny: a gradient or a pixmap
+# May be used in certain FvwmButtons, FvwmIconMan, FvwmIconBox.
+#         12 | modules, special           | gradient for IconMan/IconBox
+*FvwmTheme: Colorset 12 fg black, bg rgb:80/A0/A0, \
+	VGradient 20 rgb:80/A0/A0 rgb:C0/F0/F0, NoShape
+# swallowed window: the hilight and shadow colors should be defined
+# (-hd of xclock and -hl of xload use sh, and -hl of xclock uses hi)
+#         13 | modules, swallowed apps    | bg, fg, sh, hi for xclock/xload etc.
+*FvwmTheme: Colorset 13 fg black, bg rgb:70/8C/8C, hi black, sh gray40, Plain, NoShape
+# default #2
+# FvwmPager or to get more colors in FvwmButtons, can be set to 10.
+#         14 | modules, default #2        | alternative for Pager, Button Bar
+*FvwmTheme: Colorset 14 fg black, bg rgb:80/A0/A0, Plain, NoShape
+# default hilight #2
+# FvwmPager or to get more colors in FvwmButtons, can be set to 11.
+#         15 | modules, default hilight #2| alternative for Pager
+*FvwmTheme: Colorset 15 fg black, bg rgb:C0/F0/F0, Plain, NoShape
+# tips/balloons (TaskBar and FvwmPager)
+#         16 | modules, balloons          | TaskBar, Pager
+*FvwmTheme: Colorset 16 fg black, bg rgb:F0/F0/00, Plain, NoShape
+# WindowList Module standard item
+#         17 | modules, winlist, standard | item of IconMan, WinList, TaskBar
+*FvwmTheme: Colorset 17 fg black, bg rgb:F0/F0/00, Plain, NoShape
+# WindowList Module active item
+#         18 | modules, winlist, active   | --.--
+*FvwmTheme: Colorset 18 fg black, bg rgb:20/20/F0, Plain, NoShape
+# WindowList Module iconified item
+#         19 | modules, winlist, iconified| --.--
+*FvwmTheme: Colorset 19 fg white, bg rgb:30/38/78, Plain, NoShape
+# WindowList Module pointed item
+#         20 | modules, winlist, pointed  | --.--
+*FvwmTheme: Colorset 20 fg black, bg rgb:88/AA/AA, Plain, NoShape
+# FvwmIdent
+#         21 | modules, ident             | FvwmIdent
+*FvwmTheme: Colorset 21 fg black, bg bisque, Plain, NoShape
+# FvwmConsole
+#         22 | modules, console           | FvwmConsole
+*FvwmTheme: Colorset 22 fg white, bg rgb:00/30/60, Plain, NoShape
+# transparent
+#         23 | modules, transparent       | Button Bar
+#Colorset 23 fg $[fg.cs10], bg $[bg.cs10], Transparent, Plain, NoShape
+# reserved for modules@: 24-25
+#         24 | modules, reserved          | for the fvwm-themes future use
+#         25 | modules, reserved          | for the fvwm-themes future use
+#         26 | reserved                   | for the fvwm-themes future use
+#         27 | reserved                   | for the fvwm-themes future use
+#         28 | reserved                   | for the fvwm-themes future use
+#Colorset 24 # reserved for modules@
+#Colorset 25 # reserved for modules@
+#Colorset 26 # reserved for the future use
+#Colorset 27 # reserved for the future use
+#Colorset 28 # reserved for the future use
+# temporary colorset: 29, has no static definition, used dynamically
+#         29 | dynamical/temporary        | tools for choosing/previewing colors
+# regular terminal (xterm, rxvt, Eterm)
+#         30 | regular terminal           | xterm/rxvt or any other terminal
+*FvwmTheme: Colorset 30 fg white, bg rgb:00/00/50, Plain, NoShape
+# admin terminal (su xterm)
+#         31 | admin terminal             | terminal for root (su)
+*FvwmTheme: Colorset 31 fg white, bg rgb:00/50/50, Plain, NoShape
+# remote terminal (ssh, telnet)
+#         32 | remote terminal            | terminal with ssh/rsh/telnet
+*FvwmTheme: Colorset 32 fg white, bg rgb:50/00/00, Plain, NoShape
+# viewer terminal (man, less, tail -f)
+#         33 | viewer terminal            | man, less, tail -f
+*FvwmTheme: Colorset 33 fg white, bg rgb:00/50/00, Plain, NoShape
+# application run in the terminal, text editor using ft-xrdb
+#         34 | console application        | top, editor
+*FvwmTheme: Colorset 34 fg rgb:FF/FF/E8, bg rgb:30/48/48, Plain, NoShape
+# dialog main background (FvwmScript, FvwmForm, xmessage, ft-xrdb)
+#         35 | dialog main area           | FvwmScript, FvwmForm, xmessage
+*FvwmTheme: Colorset 35 fg black, bg rgb:80/A0/80, Plain, NoShape
+# dialog text area (FvwmScript, FvwmForm, xmessage, ft-xrdb)
+#         36 | dialog text area           | FvwmScript, FvwmForm, xmessage
+*FvwmTheme: Colorset 36 fg black, bg rgb:A0/C8/A0, Plain, NoShape
+#         37 | inactive menu entry        | inactive menu entry and menu background
+*FvwmTheme: Colorset 37 fg black, bg rgb:AA/AA/AA, Plain, NoShape
+#         38 | active menu entry          | 
+*FvwmTheme: Colorset 38 fg black, bg rgb:CC/CC/CC, Plain, NoShape
+#         39 | inactive menu item         | greyed out menu entry (only bg used) (may have pixmap or gradient)
+*FvwmTheme: Colorset 39 fg black, bg rgb:66/66/66, Plain, NoShape
+
+#Colorset 37 # reserved for the future use
+#Colorset 38 # reserved for the future use
+#Colorset 39 # reserved for the future use

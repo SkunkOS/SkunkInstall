@@ -13,7 +13,7 @@ env ASSUME_ALWAYS_YES=YES pkg install perl5
 cd /root
 
 # download the main script to the current directory
-fetch https://raw.githubusercontent.com/SkunkOS/SkunkInstaller/main/bootie -o .
+fetch https://raw.githubusercontent.com/SkunkOS/SkunkInstall/main/SkunkInstaller/bootie -o .
 
 # make it executable
 chmod 544 bootie

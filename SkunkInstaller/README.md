@@ -38,7 +38,7 @@ It is easier to do this in the SkunkOS Base Installer.<br>
 
 After you rebooted that newly-made FreeBSD installation, log in as root and enter this command:<br>
 <br>
-&nbsp;&nbsp;&nbsp;&nbsp; <b>fetch https://raw.githubusercontent.com/SkunkOS/SkunkInstaller/main/skunkinstall.sh -o - | sh</b><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <b>fetch https://raw.githubusercontent.com/SkunkOS/SkunkInstall/main/SkunkInstaller/skunkinstall.sh -o - | sh</b><br>
 <br>
 (If you don't like piping an external script into your shell, just do manually what the script does.)<br>
 

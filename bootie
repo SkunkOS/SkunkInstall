@@ -34,11 +34,6 @@
 # #               -mga
 # 
 
-# NOTES: 
-# the S3 driver depends on libxaa.so, and thus no longer works.
-# https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=257417
-# TODO add respective fail message
-
 # Tested: Jan 19 2022 (using FBSD 13-RELEASE-p6) on 1600x1200 Dell FP XXX LCD
 # on Asrock 939DualVSTA (3GB RAM)
 # FreeBSD fails to detect this boards' ACPI S3 suspend/resume capability,
@@ -51,11 +46,11 @@
 # Card AGP              driver      Comment
 # ATI Radeon 9200 SE:   radeonkms   Works fine (DVI)
 # ATI Rage 128 Pro:     r128        Fails, some EE with unwind in Xorg.log
-# Nvidia GF MX 200:     nv          Works fine [*]
-# Nvidia GF MX 440:     nv          Works fine [*]
-# Nvidia Vanta 16:      nv          Works fine [*]
-# Nvidia Quadro NVS 280:nv          Works fine [*]
-# Matrox Mill G550      mga         Works fine [*]
+# Nvidia GF MX 200:     nv          Works fine
+# Nvidia GF MX 440:     nv          Works fine
+# Nvidia Vanta 16:      nv          Works fine
+# Nvidia Quadro NVS 280:nv          Works fine
+# Matrox Mill G550      mga         Works fine
 
 # Tested: Jan 22 2022 (using FBSD 13-RELEASE-p6) on 1600x1200 Dell FP XXX LCD
 # on HP Z400 workstation
@@ -67,9 +62,9 @@
 # Radeon HD 7350        radeonkms   Works fine (DVI)
 
 # Card PCI              driver      Comment
-# SiS 86C6326           sis         Works fine [*]
-# S3 Trio 64V+          s3          Works fine (using EXA) [*]
-# ATI Mach 64           mach64      Works fine [**]
+# SiS 86C6326           sis         Works fine
+# S3 Trio 64V+          s3          Works fine (using EXA)
+# ATI Mach 64           mach64      Works fine
 
 # Tested: Jan 24 2022 (using FBSD 13-RELEASE-p6) on 1600x1200 Dell FP XXX LCD
 # on HP Z800 workstation
@@ -81,14 +76,14 @@
 # Radeon HD 7350:       radeonkms   Works fine (DVI)
 
 # Card PCI              driver      Comment
-# ATI Mach 64           mach64      Works fine [**]
-# SiS 6364              sis         Works fine [*] from X, but after resume 
+# ATI Mach 64           mach64      Works fine
+# SiS 6364              sis         Works fine from X, but after resume 
 #                                   text mode console no longer works, eg
 #                                   frequency out of range - maybe needs video
 #                                   BIOS reset after resume
 # Nvidia Quadro NVS280  nv          Fail - no state save/restore - maybe needs
 #                                   VGA BIOS reset hack
-# S3 Trio 64V+          s3          Works fine (using EXA) [*]
+# S3 Trio 64V+          s3          Works fine (using EXA)
 
 
 # Notes regarding VGA BIOS reset / UEFI VGA BIOS init hack:
@@ -108,26 +103,6 @@
 # see also: 
 # int acpi_wakeup_machdep(struct acpi_softc *sc, int state, int sleep_result,
 #     int intr_enabled)
-
-
-
-
-# These cards show in the Xorg.0.log for the higher resolutions
-# a message "frequency out of range":
-# [*]  resolution 720x400 
-# [**] resolution 864x486
-# the Xorg.0.log says for the LCD display that the higher resolutions 
-# are out of the monitors' H/V frequency range.
-# Not sure yet what's the cause. This needs to be investigated...
-
-
-# TODO
-# -r option : only rollback 1x instead of 2x ---done TODO test
-# -u install on unsupported FBSD version
-# add check that there is no more rollback after bootiefini
-# -p purge snapshots
-# -c, --configx: clean up all possible previous rc.conf and loader.conf settings for other cards before setting new ones.
-# - apache install/remove TODO
 
 
 # using boot environments as replacement for the snapshots that
@@ -162,9 +137,8 @@
 #     auto-set-sysctl vfs.usermount 1 desktop-installer
 # }
 
-
-
-
+# TODO check if nvidia-modeset should be moved to /etc/rc.conf on UEFI systems
+# https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=254069
 
 use strict;
 use warnings;
@@ -175,9 +149,6 @@ use feature 'unicode_strings';
 use Getopt::Long;
 use Data::Dumper;
 
-if ($> != 0) {
-    die "This program must be run as root!\n";
-}
 
 # flag for code to avoid kernel panic bug 
 # https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=261749
@@ -210,7 +181,7 @@ my $console_history_size = '5000';
 
 ####################    constants
 my $myname = 'bootie';
-my $myversion = '0.0.2';
+my $myversion = '0.0.3';
 my $executerlogfile = "/var/log/$myname.log";
 my $tmpfile = "/tmp/$myname.tmp";
 my $tmpfile2 = "/tmp/$myname.tmp2";
@@ -269,68 +240,98 @@ my $adduserfn = '/tmp/adduser.tmp';
 my @dewmseq = (
     'FVWM',
     'KDE',
-#     'Gnome',
+    'Gnome',
     'Mate',
-#     'XFCE',
+    'XFCE',
 );
 
 my %dewmlist = (
     'FVWM'      => 'No-bloat, no-distraction power for power users',
     'KDE'       => 'Windows clone - heavyweight but has great apps',
-#     'Gnome'     => 'The Gnome - for those who like it, it is the best',
+    'Gnome'     => 'The Gnome - for those who like it, it is the best',
     'Mate'      => 'Derived from old Gnome, faster than current Gnome',
-#     'XFCE'      => 'Another Windows clone, leaner than KDE',
+    'XFCE'      => 'Another Windows clone, leaner than KDE',
 );
 
 my %dewmlistenable = (
     'FVWM'      => 'on',
     'KDE'       => 'on',
-#     'Gnome'     => 'off',
+    'Gnome'     => 'off',
     'Mate'      => 'off',
-#     'XFCE'      => 'off',
+    'XFCE'      => 'off',
 );
 
 
 my @appseq = (
+    'recoll'     ,
     'firefox_esr',
     'chromium'   ,
     'midori'     ,
     'pidgin'     ,
     'telegram'   ,
     'thunderbird',
+    'clawsmail'  ,
+    'qbittorrent',
+    'transmission',
     'libreoffice',
+    'geany'      ,
+    'pgmodeler'  ,
+    'darktable'  ,
     'gimp'       ,
     'krita'      ,
     'inkscape'   ,
     'freeplane'  ,
     'k3b'        ,
+    'obs_studio' ,
+    'shortwave'  ,
+    'audacious'  ,
+    'deadbeef'   ,
     'vlc'        ,
+    'smplayer'   ,
+    'mpv'        ,
+    'pwcview'    ,
     'ssr'        ,
     'kdenlive'   ,
     'openshot'   ,
     'shotcut'    ,
+    'wireshark'  ,
     'virtualbox' ,
     'gammy'      ,
 );
 
 my %applist = (
+    'recoll'             => 'Personal full text search package',
     'firefox_esr'        => 'Mozilla Firefox web browser',
     'chromium'           => 'Google Chromium web browser',
     'midori'             => 'Midori lightweight web browser',
     'pidgin'             => 'Pidgin multi-protocol messenger',
     'telegram'           => 'Telegram Desktop messaging app',
     'thunderbird'        => 'Mozilla Thunderbird mail and news',
+    'clawsmail'          => 'Lightweight e-mail and news client',
+    'qbittorrent'        => 'Bittorrent client',
+    'transmission'       => 'Transmission Bittorrent client',
     'libreoffice'        => 'Libreoffice suite',
+    'geany'              => 'Fast and lightweight editor/IDE',
+    'pgmodeler'          => 'PostgreSQL Database Modeler',
+    'darktable'          => 'Virtual lighttable and darkroom',
     'gimp'               => 'The Gimp raster graphics editor',
     'krita'              => 'Sketching and painting program',
     'inkscape'           => 'Inkscape vector graphics editor',
     'freeplane'          => 'Mind mapping and knowledge management',
     'k3b'                => 'K3B CD/DVD writing suite',
+    'obs_studio'         => 'Open source streaming/recording software',
+    'shortwave'          => 'Listen to internet radio',
+    'audacious'          => 'Lightweight and versatile audio player',
+    'deadbeef'           => 'Ultimate music player',
     'vlc'                => 'VideoLan multimedia player/streamer',
+    'smplayer'           => 'Mplayer multimedia player',
+    'mpv'                => 'General-purpose video player',
+    'pwcview'            => 'Personal webcam viewer',
     'ssr'                => 'Simple Screen recorder',
     'kdenlive'           => 'Kdenlive video editing suite',
     'openshot'           => 'OpenShot Video Editor',
     'shotcut'            => 'Shotcut video editor',
+    'wireshark'          => 'Powerful network analyzer/capture tool',
     'virtualbox'         => 'Virtualbox',
     'gammy'              => 'Adaptive screen brightness and temperature',
 );
@@ -365,6 +366,10 @@ my $contributors = {
     'obsigna' => 'https://forums.freebsd.org/threads/update-to-virtualbox-ose-additions-6-1-18-killed-xorg.79451/post-501647',
     'Warner Losh' => 'https://lists.freebsd.org/archives/freebsd-hackers/2022-January/000732.html',
     'Jason Bacon' => 'http://acadix.biz/desktop-installer.php',
+    'hunter0one' => 'https://forums.freebsd.org/threads/list-your-suite-of-desktop-apps.84116/',
+    'Argentum' => 'https://forums.freebsd.org/threads/list-your-suite-of-desktop-apps.84116/post-556137',
+    'grahamperrin' => 'https://forums.freebsd.org/threads/list-your-suite-of-desktop-apps.84116/post-556131',
+    'vermaden' => 'https://forums.freebsd.org/threads/list-your-suite-of-desktop-apps.84116/post-556148',
 };
 
 ####################    constants
@@ -542,6 +547,8 @@ my $httpd_conf;     # contains text of generated httpd.conf
 my $user1001;
 my $user1001home;
 my $dt;             # gets set to = getdirdatetag();
+
+my $buildkernel = 0;
 
 # command queues
 my $cmd = '';
@@ -968,7 +975,23 @@ sub do_installprocfs
     }
     my $mnt = `mount`;
     if (not ($mnt =~ /^procfs on \/proc/ms)) {
-        my $pcmd = "mount proc\n";
+        my $pcmd = "mount -t procfs proc /proc\n";
+        executer( $pcmd);
+    }
+}
+
+sub do_installfdescfs
+{
+    my $fstab = read_a_file( $f_fstab);
+    die if (not defined $fstab);
+    if (not ($fstab =~ /^fdesc\s+\/dev\/fd\s+fdescfs/ms)) {
+        my $crap = "\nfdesc\t\t\t/dev/fd\t\tfdescfs\trw\t\t0\t0\n";
+        die if append_a_file( $f_fstab, \$crap);
+    }
+    my $mnt = `mount`;
+    if (not ($mnt =~ /^fdescfs on \/dev\/fd/ms)) {
+#         my $pcmd = "mount -t fdescfs /dev/fd\n";
+        my $pcmd = "mount fdesc\n";
         executer( $pcmd);
     }
 }
@@ -1292,6 +1315,13 @@ sub executer
         } elsif (/^$writehelloworld/) {
             do_writehelloworld();
             next;
+        } elsif (/^$pkginst/) {
+            # TODO check whether this can help to avoid locks and 
+            # annoying breakage of ongoing installations
+            my $sleeptime = 10;
+            logconsole( "executer: Waiting $sleeptime seconds before installing (next) package\n");
+            sleep( $sleeptime); # wait before proceeding with next package
+            # no next; fall through
         }
         
         # check if special "pass on" return codes are defined
@@ -1670,7 +1700,8 @@ my $fbsdvers_drmkmod_drivername = {
     '12' => 'graphics/drm-kmod',
     '13' => 'graphics/drm-kmod',
     '13-devel' =>'graphics/drm-devel-kmod',
-    '14' =>'graphics/drm-devel-kmod',
+    '14' => 'graphics/drm-kmod',
+    '14-devel' => 'graphics/drm-devel-kmod',
 };
 my $fbsdvers_drmkmod_modulename = {
     '12' => undef,
@@ -1688,7 +1719,7 @@ my $fbsd__drmkmod_versions_index = {
     '13' => '4',
     '13-devel' => '5',
     '14' => '6',
-    '' => '7',
+    '14-devel' => '7',
 };
 
 my $indintel_archgencpu = 7;
@@ -7435,6 +7466,22 @@ sub vgadetect
                     $usekms = 0;
                 } 
 
+                
+#                 
+#                 # TODO find old intel hw users you can verify this with
+#                 
+#                 # make sure for chips <= GPU gen 2 or 3 do NOT use drm-kmod
+#                 # just one example: https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=261887
+#                 if (exists ${$pciids_intel}{$pciid}) {
+#                     $props_aref = ${$pciids_intel}{$pciid};
+#                     my $gpugen = $$props_aref[$indintel_gengpu]
+# 
+#                     
+#                 }
+                
+                
+                
+                
                 ###########
                 # now choose a drm-kmod version
                 my $props_aref;
@@ -8490,8 +8537,8 @@ sub autodetectautoconfigure
         if ( ${$vga}{$bootvga}{$key_vendorid} eq $pcivendor_nvidia or
                  not exists ${$vga}{$bootvga}{$key_kdriver}  ) {
             $$rmsg .= ($zzz_supported)
-                    ? "For graphics cards/chips that are not from the Intel/AMD oligopoly, the VT console breaks S3 sleep suspend/resume. This only works with the SC console. For this reason, "
-                    : "Because the vt console does not support positive display and has quite some other issues, ";
+                    ? "For graphics cards/chips that are not supported by the Intel/AMD KMS drivers, the buggy vt newcons console breaks S3 sleep suspend/resume. This only works with the SC console. For this reason, "
+                    : "Because the buggy vt newcons console does not support positive display and has quite some other issues, ";
             $$rmsg .= "the SC console will be used by your computer.\\n";
             $$usecon = 'sc';
             if ($zzz_supported) {
@@ -8513,7 +8560,7 @@ sub autodetectautoconfigure
             }
         } else {
             # KMS supported cards
-            $$rmsg .= "Please note that the vt console will be used by your computer. This is necessary because the KMS drivers for graphics cards/chips like yours, that are from the Intel/AMD oligopoly, do the suspend/resume handling and only work with the vt console.\\nSuspend/resume will work both from console and X Window.\\n";
+            $$rmsg .= "Please note that the vt newcons console will be used by your computer. This is necessary because the KMS drivers for Intel/AMD graphics cards/chips like yours, which do the suspend/resume handling, lack support for the SC console.\\nSuspend/resume will work both from console and X Window.\\n";
             $$usecon = 'vt';
             my $kdrv = ${$vga}{$bootvga}{$key_kdriver};
             $$klcmd .= "[0 1]kldload $kdrv\n";
@@ -8527,9 +8574,9 @@ sub autodetectautoconfigure
         if ( ${$vga}{$bootvga}{$key_vendorid} eq $pcivendor_nvidia or
                  not exists ${$vga}{$bootvga}{$key_kdriver}  ) {
             $$rmsg .= "Unfortunately, your system is configured as UEFI. This comes with a lot of disadvantages.\\n\\n" .
-            "As long as the necessary VGA BIOS kernel hacks for enabling the SC console have not been implemented, or alternatively nouveau KMS has been ported to FreeBSD, you are forced to use the vt newcons console, which breaks suspend/resume for cards not from the Intel/AMD oligopoly. So you cannot use suspend/resume on this configuration, neither on console nor on X Window. :( \\n";
+            "As long as the necessary VGA BIOS kernel hacks for enabling the SC console on UEFI systems have not been implemented, you are forced to use the buggy vt newcons console, which breaks suspend/resume for cards not from the Intel/AMD oligopoly. So you cannot use suspend/resume on this configuration, neither on console nor on X Window. :( \\n";
         } else {
-            $$rmsg .= "Your system is configured as UEFI.\\n\\nPlease note that the vt console will be used by your computer. This is necessary because the KMS drivers for graphics cards/chips like yours, that are from the Intel/AMD oligopoly, do the suspend/resume handling and only work with the vt console.\\nSuspend/resume will work both from console and X Window.\\n";
+            $$rmsg .= "Your system is configured as UEFI.\\n\\nPlease note that the vt newcons console will be used by your computer. This is necessary because the KMS drivers for graphics cards/chips like yours, that are from the Intel/AMD oligopoly, which do the suspend/resume handling, do not support the SC console.\\nSuspend/resume will work both from console and X Window.\\n";
             my $kdrv = ${$vga}{$bootvga}{$key_kdriver};
             $$klcmd .= "[0 1]kldload $kdrv\n";
             $$execmd .= "$sysmod $f_rc_conf kld_list+=\" $kdrv\" double\n";
@@ -8537,7 +8584,8 @@ sub autodetectautoconfigure
     }
     $$execmd .= "$sysmod $f_boot_loader_conf kern.vty=$$usecon double\n";
     if ($runningconsole ne $$usecon) {
-        $$rmsg .= "\\nImportant: Until you have rebooted, suspend/resume will not work, because you have the still the \"wrong $runningconsole\" running.\\n";
+        # TODO put this out only if s/r can work on this config!
+        $$rmsg .= "\\nImportant: Until you have rebooted, suspend/resume will not work, because you have the still the \"wrong $runningconsole\" console running.\\n";
     }
 }
 
@@ -8635,9 +8683,9 @@ sub check_preupdate
             if (not yesno(
             "$bootie_backtitleheader: Installation stage",
             'Preinstall step: Consider using non-UEFI mode',
-            "Your system is currently running in UEFI mode.\\nPlease consider whether you can use CSM (non-UEFI) BIOS mode, as in UEFI mode suspend/resume will not work if your primary (boot) graphics card is Nvidia.\\nHit \"Enter\" to continue installation anyway, or hit \"Cancel\" if you prefer to abort and reinstall in non-UEFI mode.",
+            "Your system is currently running in UEFI mode.\\nPlease consider whether you can use CSM (non-UEFI) BIOS mode, as in UEFI mode suspend/resume will not work if your primary (boot) graphics card is Nvidia, as for now, the SC console does not work with UEFI, and the buggy vt newcons console breaks suspend/resume with all graphics cards other than Intel/AMD.\\nHit \"Enter\" to continue installation anyway, or hit \"Cancel\" if you prefer to abort and reinstall in non-UEFI mode.",
             '19 72')) {
-                print "Aborted installation. Go to BIOS, deactivate UEFI mode, and reinstall FreeBSD, then start $myname again.\n";
+                print "Aborted installation. Go to BIOS, deactivate UEFI mode, and reinstall FreeBSD, then run $myname again.\n";
                 exit (1);
             }
         }
@@ -9180,6 +9228,22 @@ sub checkcleanbe
     }
 }
 
+sub getkernelsrcandbuild
+{
+    # get kernel sources
+    $cmd .= "[0 1]rm -r /usr/src/*\n";
+    $cmd .= "[0 1]rm -r /usr/src/.*\n";
+
+    $cmd .= "$pkginst git\n";
+    $cmd .= "git clone -b releng/$fbsd_major.$fbsd_minor --depth 1 https://git.freebsd.org/src.git /usr/src\n";
+
+    $cmd .= "$writeskunkoskernconf\n";
+    $cmd .= "cd /usr/src\n";
+    $cmd .= "make buildkernel -j$threadstocompilewith KERNCONF=SKUNKOS\n";
+    # TODO can -j be used with installkernel at all?
+    #         $cmd .= "make installkernel -j$threadstocompilewith KERNCONF=SKUNKOS\n";
+    $cmd .= "make installkernel KERNCONF=SKUNKOS\n";
+}
 
 ################################################################
 ####################################
@@ -9210,13 +9274,14 @@ sub do_skunkosbaseinstall
     my $kmsg = '';
 
     # TODO 
-    # maybe skip build on laptops with Intel/AMD GPU and old vesa.ko-dependent freedesktop drivers?
-    # in this case a new kernel might be not necessary, and a lengthy build could be skipped
-    my $buildkernel = 0;
+    
+    
+# TODO add kernel build check to xorg configuration step
+# 
     if ($system_isuefi) {
         # suspend/resume only works with vt+kms, custom kernel 
         # doesn't improve anything until vt is able to use custom colors
-        $kmsg = 'This is an UEFI system. For UEFI systems there is no disadvantage in using the stock FreeBSD kernel. So, to speed up the SkunkOS installation, you can skip building a new kernel.\n';
+        $kmsg = 'This is an UEFI system. For UEFI systems, using the stock FreeBSD kernel will not be detrimental to the suspend/resume capabilities. So, to speed up the SkunkOS installation, you might want to skip building a new kernel.\n';
     } else {
         # if it has Intel/AMD KMS graphics, new kernel is of no use
         # only in case of Nvidia Optimus, but as I have no idea how 
@@ -9232,7 +9297,7 @@ sub do_skunkosbaseinstall
             if ( ${$vga}{$bootvga}{$key_vendorid} eq $pcivendor_intel or
                     ${$vga}{$bootvga}{$key_vendorid} eq $pcivendor_atiamd) 
             {
-                $kmsg = 'This system has a graphics adapter made by the Intel/AMD oligopoly. So there is no disadvantage in using the stock FreeBSD kernel. So, to speed up the SkunkOS installation, you can skip building a new kernel.\n';
+                $kmsg = 'This system has a graphics adapter made by the Intel/AMD oligopoly, for which the stock FreeBSD kernel will not break suspend/resume. So, to speed up the SkunkOS installation, you might want to skip building a new kernel.\n';
             } else {
                 if ($zzz_supported and 
                         ${$vga}{$bootvga}{$key_vendorid} eq $pcivendor_nvidia) {
@@ -9262,18 +9327,19 @@ sub do_skunkosbaseinstall
     }
     if (not $buildkernel) {
         if ($kmsg eq '') {
-            $kmsg .= 'For your graphics hardware there is no disadvantage in using the stock kernel. So, to speed up the SkunkOS installation, you can skip building a new kernel.\n';
+            $kmsg .= 'For your graphics hardware, the stock kernel does not break suspend/resume capability. So, to speed up the SkunkOS installation, you might want to skip building a new kernel.\n';
         }
     }
-
-    $kmsg .= '\nDo you want to build a kernel' .
-                (($buildkernel)
-                    ? '?'
-                    : ' anyway?');
+    $kmsg .= '\nAside of enhancing the suspend/resume capabilities, building a new kernel also fixes other annoyances.\nFor example, the console scrollback buffer is ridiculously small and practically useless with the standard kernel.\nOther advantages of building a kernel are positive console display instead of the ugly white-on-black of the computer stone age. (Note: This currently only works on SC console. On the buggy vt newcons console the negative display stays until vt newcons hopefully gets fixed some day.)\n';
+#     $kmsg .= '\nDo you want to build a kernel' .
+#                 (($buildkernel)
+#                     ? '?'
+#                     : ' anyway?');
+    $kmsg .= '\nDo you want the Skunk Installer to build a kernel?';
     
     $buildkernel = 
         yesno( 
-            '$bootie_backtitleheader: Base build stage',
+            "$bootie_backtitleheader: Base build stage",
             'Build notification message',
             $kmsg,
             '15 72');
@@ -9281,6 +9347,7 @@ sub do_skunkosbaseinstall
     $kmsg = ($buildkernel)
                 ? 'The kernel will be built.\n'
                 : '';
+
     if (not $enable_skipapachebuild) {
         $kmsg .= 'The Apache webserver patched for the system management web interface will be built, as the packaged version cannot access the system on root level.\n';
     }
@@ -9288,8 +9355,9 @@ sub do_skunkosbaseinstall
     $kmsg .= '\nDepending on the speed of your computer this can take a few minutes (modern multi-core processor, plenty of RAM, SSD) to many hours (ancient single-core CPU, little RAM and slow HDD).\n\nYou will see the build process is finished when the next installation dialog screen with its blue background appears. Then the installation can continue.\n\n';
 
     if ($buildkernel or not $enable_skipapachebuild) {
+#     unless ($enable_skipapachebuild) {
         msgbox( 
-            '$bootie_backtitleheader: Base build stage',
+            "$bootie_backtitleheader: Base build stage",
             'Build notification message',
             $kmsg . 'Please hit "Enter" to proceed with the build process.',
             '15 72');
@@ -9301,25 +9369,12 @@ sub do_skunkosbaseinstall
         $cmd .= "portsnap extract\n";
         $cmd .= "portsnap update\n";
         
-        # get kernel sources
-        $cmd .= "[0 1]rm -r /usr/src/*\n";
-        $cmd .= "[0 1]rm -r /usr/src/.*\n";
-
-        $cmd .= "$pkginst git\n";
-        $cmd .= "git clone -b releng/$fbsd_major.$fbsd_minor --depth 1 https://git.freebsd.org/src.git /usr/src\n";
-
         if (not $enable_skipapachebuild) {
             buildapache();
             configapache();
         }
-
         if ($buildkernel) {
-            $cmd .= "$writeskunkoskernconf\n";
-            $cmd .= "cd /usr/src\n";
-            $cmd .= "make buildkernel -j$threadstocompilewith KERNCONF=SKUNKOS\n";
-        # TODO can -j be used with installkernel at all?
-        #         $cmd .= "make installkernel -j$threadstocompilewith KERNCONF=SKUNKOS\n";
-            $cmd .= "make installkernel KERNCONF=SKUNKOS\n";
+            getkernelsrcandbuild();
         }
         executer( $cmd);
         $cmd = '';
@@ -9683,8 +9738,8 @@ sub do_skunkosxinstall
         # TODO ? I read Gnome wants GDM to be installed also?!?
         # If so, it sucks balls even more than I thought...
 #         $cmd .= "$pkginst x11/gdm\n";
-        $cmd .= "$sysmod $f_rc_conf gdm_enable=NO double";
-        $cmd .= "$sysmod $f_rc_conf gnome_enable=YES double";
+        $cmd .= "$sysmod $f_rc_conf gdm_enable=NO double\n";
+        $cmd .= "$sysmod $f_rc_conf gnome_enable=YES double\n";
     }
     
     if (exists $selectdewms{ 'Mate'}) {
@@ -9852,8 +9907,66 @@ perm pass* 0660
         # language, e.g. en-hunspell for English.
         # TODO: questionnaire
     }
+    if (exists $selectapps{ 'geany'}) {
+        $cmd .= "$pkginst geany\n";          # Fast and lightweight GTK+ IDE
+    }
     if (exists $selectapps{ 'firefox_esr'}) {
         $cmd .= "$pkginst firefox-esr\n";          # Web browser based on the browser portion of Mozilla
+    }
+    if (exists $selectapps{ 'recoll'}) {
+        $cmd .= "$pkginst recoll\n";          # Personal full text search package, based on Xapian
+    }
+    if (exists $selectapps{ 'pgmodeler'}) {
+        $cmd .= "$pkginst pgmodeler\n";          # PostgreSQL Database Modeler
+    }
+    if (exists $selectapps{ 'mpv'}) {
+        $cmd .= "$pkginst mpv\n";          # Free and open-source general-purpose video player
+    }
+    if (exists $selectapps{ 'transmission'}) {
+        $cmd .= "$pkginst transmission-gtk\n";          # Meta-port for Transmission BitTorrent client
+    }
+    if (exists $selectapps{ 'pwcview'}) {
+        $cmd .= "$pkginst pwcview\n";          # The Video4Linux PWC webcam viewer
+    }
+    if (exists $selectapps{ 'smplayer'}) {
+        $cmd .= "$pkginst smplayer\n";          # Complete front-end based on Qt for mplayer
+    }
+    if (exists $selectapps{ 'deadbeef'}) {
+        $cmd .= "$pkginst deadbeef\n";          # Ultimate music player for Unix-like systems
+        $cmd .= "$pkginst deadbeef-jack-plugin\n";          # 
+        $cmd .= "$pkginst deadbeef-mpris2-plugin\n";          # 
+        $cmd .= "$pkginst deadbeef-musical-spectrum-plugin\n";          # 
+        $cmd .= "$pkginst deadbeef-playback-status-plugin\n";          # 
+        $cmd .= "$pkginst deadbeef-quick-search-plugin\n";          # 
+        $cmd .= "$pkginst deadbeef-spectrogram-plugin\n";          # 
+        $cmd .= "$pkginst deadbeef-vu-meter-plugin\n";          # 
+        $cmd .= "$pkginst deadbeef-waveform-seekbar-plugin\n";          # 
+    }
+    if (exists $selectapps{ 'wireshark'}) {
+        $cmd .= "$pkginst wireshark\n";          # Powerful network analyzer/capture tool
+#         TODO
+#         In order for wireshark be able to capture packets when used by unprivileged
+#         user, /dev/bpf should be in network group and have read-write permissions.
+#         For example:
+# 
+#         # chgrp network /dev/bpf*
+#         # chmod g+r /dev/bpf*
+#         # chmod g+w /dev/bpf*
+# 
+#         In order for this to persist across reboots, add the following to
+#         /etc/devfs.conf:
+# 
+#         own  bpf* root:network
+#         perm bpf* 0660
+        
+        $cmd .= "chgrp network /dev/bpf*\n";
+        $cmd .= "chmod g+r /dev/bpf*\n";
+        $cmd .= "chmod g+w /dev/bpf*\n";
+        my $addevfsconf = 
+q|own  bpf* root:network
+perm bpf* 0660
+|;
+        die if append_a_file( $f_devfs_conf, \$addevfsconf);
     }
     if (exists $selectapps{ 'chromium'}) {
         $cmd .= "$pkginst chromium\n";             # Google web browser based on WebKit
@@ -9871,6 +9984,25 @@ perm pass* 0660
     }
     if (exists $selectapps{ 'thunderbird'}) {
         $cmd .= "$pkginst thunderbird\n";          # Mozilla Thunderbird is standalone mail and news that stands above
+    }
+    if (exists $selectapps{ 'clawsmail'}) {
+        $cmd .= "$pkginst claws-mail\n";          # Lightweight and featureful GTK+ based e-mail and news client
+    }
+    if (exists $selectapps{ 'qbittorrent'}) {
+        $cmd .= "$pkginst qbittorrent\n";          # Bittorrent client using Qt5 and libtorrent-rasterbar
+    }
+    if (exists $selectapps{ 'darktable'}) {
+        $cmd .= "$pkginst darktable\n";          # Virtual lighttable and darkroom for photographers
+    }
+    if (exists $selectapps{ 'obs_studio'}) {
+        $cmd .= "$pkginst obs-studio\n";          # Open source streaming/recording software
+    }
+    if (exists $selectapps{ 'shortwave'}) {
+        $cmd .= "$pkginst shortwave\n";          # Listen to internet radio
+    }
+    if (exists $selectapps{ 'audacious'}) {
+        $cmd .= "$pkginst audacious\n";                  # Lightweight and versatile audio player
+        $cmd .= "$pkginst audacious-plugins\n";
     }
     if (exists $selectapps{ 'vlc'}) {
         $cmd .= "$pkginst vlc\n";                  # Qt based multimedia player and streaming server
@@ -9947,19 +10079,7 @@ perm pass* 0660
 # want to use this script you need to install print/tex-dvipsk.
 
 
-# TODO
-# gnupg-2.3.3_2:
-# On install:
-# When run on hosts without IPv6 connectivity, GnuPG may fail to connect to
-# dual-stack hkp servers [1]. As a workaround, add:
-# 
-# disable-ipv6
-# 
-# to:
-# 
-# /usr/local/etc/dirmngr.conf
-# 
-# [1] https://dev.gnupg.org/rGecfc4db3a2f8bc2652ba4ac4de5ca1cd13bfcbec
+
     
     
 # TODO
@@ -10011,6 +10131,34 @@ perm pass* 0660
 # - sample-rate: can be 44100, 48000, etc.
 # - /dev/dsp{N}: your OSS devices, usually /dev/dsp0
 # ======================================================================
+# jackit-1.9.20_1:
+# On install:
+# The new JACK server comes with a DBUS control interface:
+# 
+# $ jack_control help
+# $ jack_control ds oss
+# $ jack_control dp
+# $ jack_control eps realtime False
+# $ jack_control start
+# 
+# Only root can grant real-time priority to processes for now, using rtprio(1).
+# Upcoming FreeBSD releases will have a MAC policy with a realtime user group.
+# 
+# Memory locking has to be allowed in /etc/login.conf or ~/.login_conf. Set the
+# resource limit ":memorylocked=unlimited:" and don't forget to run
+# 
+# # cap_mkdb /etc/login.conf
+# 
+# It's still possible to start JACK server as an RC service for a dedicated user.
+# Note that only one JACK server can be run at a time. An /etc/rc.conf example:
+# 
+# jackd_enable="YES"
+# jackd_user="joe"
+# jackd_rtprio="YES"
+# jackd_args="-R -doss -r48000 -p1024 -n1 -w16 \
+#             --capture /dev/dsp0 --playback /dev/dsp0"
+# 
+# Official JACK example clients and tools are available as jack-example-tools.
 
     
 # libburn-1.5.4:
@@ -10179,7 +10327,30 @@ perm pass* 0660
 # 
 # Bug reports should go to the: https://bugzilla.samba.org/
 
-    
+
+# qt5-sql-5.15.2p263:
+# On install:
+# To enable Qt database support, install the database plugin ports. The
+# following plugin ports are available:
+#  - databases/qt5-sqldrivers-ibase       InterBase/Firebird
+#  - databases/qt5-sqldrivers-mysql       MySQL
+#  - databases/qt5-sqldrivers-odbc        Open Database Connectivity
+#  - databases/qt5-sqldrivers-pgsql       PostgreSQL
+#  - databases/qt5-sqldrivers-sqlite2     SQLite 2
+#  - databases/qt5-sqldrivers-sqlite3     SQLite 3
+#  - databases/qt5-sqldrivers-tds         FreeTDS
+
+ 
+# wayland-1.20.0:
+# On install:
+# Wayland requires XDG_RUNTIME_DIR to be defined to a path that will
+# contain "wayland-%d" unix(4) sockets. This is usually handled by
+# consolekit2 (via ck-launch-session) or pam_xdg (via login).
+
+
+
+
+
     # we need sudo to run startx as user
     $cmd .= "$pkginst sudo\n";
     $cmd .= "$sysmod /usr/local/etc/sudoers '$user1001 ALL = NOPASSWD: /usr/local/bin/xrandr /usr/sbin/acpiconf /usr/sbin/zzz' none\n";
@@ -10454,6 +10625,41 @@ kded5 &
 
     executer( $cmd);
     $cmd = '';
+    
+    
+    
+# gnupg-2.3.3_2:
+# On install:
+# When run on hosts without IPv6 connectivity, GnuPG may fail to connect to
+# dual-stack hkp servers [1]. As a workaround, add:
+# 
+# disable-ipv6
+# 
+# to:
+# 
+# /usr/local/etc/dirmngr.conf
+# 
+# [1] https://dev.gnupg.org/rGecfc4db3a2f8bc2652ba4ac4de5ca1cd13bfcbec
+    if (-e 'usr/local/bin/gpg') {
+        # see https://how-to.fandom.com/wiki/How_to_test_if_your_BSD_system_supports_IPv6
+        logconsole( "Preparation for GnuPG: Checking for IPv6 availability\n");
+        my $r = callsystem( 'ping6 -c3 www.kame.net');
+        unless ($r == 0 or $r == 2) {
+            # no IP6 available
+            my $addirmgr = "\ndisable-ipv6\n";
+            die if append_a_file( '/usr/local/etc/dirmngr.conf', \$addirmgr);
+            logconsole( "Preparation for GnuPG: IPv6 not available, configured PGP accordingly.\n");
+        } else {
+            logconsole( "Preparation for GnuPG: IPv6 available, no GnuPG workaround necessary.\n");
+        }
+    }
+    
+    # some linux-ish ports want procfs and fdescfs
+    # for example openjdk
+    # these are hard-to-detect as they are by-installs etc 
+    # for now, just create them
+    do_installprocfs();
+    do_installfdescfs();
 }
 
 sub getdirfiles {
@@ -10499,8 +10705,33 @@ sub getfontpaths
     return $fontpaths;
 }
 
+sub isvesainkernel
+{
+    my $kldstat = `kldstat`;
+    my $vesaisloaded = $kldstat =~ /\svesa.ko$/smg;
+    
+    # if vesa appears in kldstat, it has been loaded, so it cannot be built in kernel
+    if ($vesaisloaded) {
+        logconsole( "isvesainkernel: vesa.ko is loaded separately, not built into kernel\n");
+        return 0;
+    }
+    
+    # try kldloading vesa. if it errors then it has been built in kernel.
+    my $r = callsystem( 'kldload vesa');
+    if ($r) {
+        logconsole( "isvesainkernel: vesa.ko is built into kernel\n");
+        return 1;
+    }
+    # clean up
+    callsystem( 'kldunload vesa');
+    logconsole( "isvesainkernel: vesa.ko is not built into kernel\n");
+    return 0;
+}
+
 sub do_skunkosxinstallconfigx
 {
+    my $vesakernel = isvesainkernel();
+    
     if (defined $opt_configx) {
         # clean up configuration files
         cleanconfigs();
@@ -10571,7 +10802,103 @@ sub do_skunkosxinstallconfigx
     cleanconfigs();
     autodetectautoconfigure(\$finalmsg, \$cmd, \$kldcmd, \$usecons);
     $cmd .= $kldcmd;
+    # beware of drm-kmod
+    # it can turn the screen black if good old sc is running while kldloading it
+    # so we need to care for that
+    catchkmssurprise();
+    # find out if we already have our kernel built
+    my $isskunkkernel = 0;
+    if (-e "/usr/src/sys/$system_arch/conf/SKUNKOS") {
+        # config file is there, we have passed the build already.
+        # but what if the user did an update and needs to rebuild kernel?
+        # maybe also check file dates?
+        # better idea: grep the kernel file for 'SKUNKOS' :D
+        my $kernel = read_a_file( '/boot/kernel');
+        $isskunkkernel = $$kernel =~ /SKUNKOS/;
+    }
+    my $vesaallergic = 0;
+    my $kmsg = '';
+    if (not $isskunkkernel and not $buildkernel and $vesakernel) {
+        if ($system_isuefi) {
+            # suspend/resume only works with vt+kms, custom kernel 
+            # doesn't improve anything until vt is able to use custom colors
+            $kmsg = 'This is an UEFI system. For UEFI systems there is no disadvantage in using the stock FreeBSD kernel. So you can skip building a new kernel.\n';
+        } else {
+            # if it has Intel/AMD KMS graphics, new kernel is of no use
+            # only in case of Nvidia Optimus, but as I have no idea how 
+            # to deal with that yet, skip kernel build here, too.
 
+            my $numbervgas = scalar @vgas;
+            if ($numbervgas == 1) {
+                # only one vga
+                if ( ${$vga}{$bootvga}{$key_vendorid} eq $pcivendor_intel or
+                        ${$vga}{$bootvga}{$key_vendorid} eq $pcivendor_atiamd) 
+                {
+                    $kmsg = 'This system has a graphics adapter made by the Intel/AMD oligopoly. So there is no disadvantage in using the stock FreeBSD kernel. So you can skip building a new kernel.\n';
+                } else {
+#                     if ($zzz_supported and $vesakernel and
+                    if ($zzz_supported and 
+                            ${$vga}{$bootvga}{$key_vendorid} eq $pcivendor_nvidia) {
+                        my $drvno = ${$vga}{$bootvga}{$key_usedrivernr};
+                        if ( ${$vga}{$bootvga}{$drvno}{$key_udrivershort} ne 'nv') {
+                            $kmsg = 'This system has a modern Nvidia graphics adapter.\nIf you use the stock FreeBSD kernel, suspend/resume will not work. So it is recommended to build a new kernel to make suspend/resume work.\n';
+                            $buildkernel = 1;
+                            $vesaallergic = 1;
+                        }
+                    }
+                }
+            } else {
+                # multiple graphics cards
+                if ($zzz_supported) {
+                    # If the graphics cards are modern Nvidia, we need to build kernel.
+                    my $i;
+                    for ( $i = 0; $i < $numbervgas; ++$i) {
+                        if (${$vga}{"$i"}{$key_vendorid} eq $pcivendor_nvidia) {
+                            my $drvno = ${$vga}{"$i"}{$key_usedrivernr};
+                            if ( $vesakernel and 
+                                    ${$vga}{"$i"}{$drvno}{$key_udrivershort} ne 'nv') {
+                                $kmsg = 'This system has a modern Nvidia graphics adapter.\nIf you use the stock FreeBSD kernel, suspend/resume will not work. So it is recommended to build a new kernel to make suspend/resume work.\n';
+                                $buildkernel = 1;
+                                $vesaallergic = 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (not $buildkernel) {
+            if ($kmsg eq '') {
+                $kmsg .= 'For your graphics hardware there is no disadvantage in using the stock kernel. So, to speed up the SkunkOS installation, you can skip building a new kernel.\n';
+            }
+        }
+        $kmsg .= '\nDo you want to build a kernel' .
+                    (($buildkernel)
+                        ? '?'
+                        : ' anyway?');
+        
+        $buildkernel = 
+            yesno( 
+                "$bootie_backtitleheader: Kernel build stage",
+                'Build notification message',
+                $kmsg,
+                '15 72');
+
+        if ($buildkernel) {
+            $kmsg .= 'The kernel will be built.\n\nDepending on the speed of your computer this can take a few minutes (modern multi-core processor, plenty of RAM, SSD) to many hours (ancient single-core CPU, little RAM and slow HDD).\n\nYou will see the build process is finished when the next installation dialog screen with its blue background appears. Then the installation can continue.\n\n';
+
+            msgbox( 
+                "$bootie_backtitleheader: Kernel build stage",
+                'Build notification message',
+                $kmsg . 'Please hit "Enter" to proceed with the build process.',
+                '15 72');
+
+            getkernelsrcandbuild();
+            executer( $cmd);
+            $cmd = '';
+        }
+    }
+    
     # register font paths that are not built-in in xorg
     my $fopa = getfontpaths( $d_fontsdir);
     $xorgconf =~ s/(.*?\nSection\s+"Files").*?(EndSection.*)/$1\n$fopa$2/s;
@@ -10596,11 +10923,6 @@ sub do_skunkosxinstallconfigx
     # finally, clean up dependencies
     $cmd .= "env ASSUME_ALWAYS_YES=YES pkg autoremove\n";
 
-    # crappy drm-kmod sucks balls
-    # it turns the screen black if good sc is running while kldloading it
-    # so we need to care for that
-    catchkmssurprise();
-
     executer( $cmd);
     $cmd = '';
 
@@ -10616,6 +10938,11 @@ sub do_skunkosxinstallconfigx
         }
     }
     
+    # create cache for fontconfig
+    if (-e '/usr/local/bin/fc-cache') {
+        $cmd .= "fc-cache\n";
+    }
+
     if (not defined $opt_configx) {
         $cmd .= "bectl create $SkunkOSXInstall\n";
     }
@@ -10650,11 +10977,14 @@ sub do_skunkosxinstallconfigx
             exit 0;
         }
     }
-    
+    $kmsg = '';
+    if ((not $isskunkkernel or $vesakernel) and ($vesaallergic and $buildkernel)) {
+        $kmsg .= "Please note that the old kernel is still running.\\nSuspend/resume will only work after loading the new kernel by rebooting.\\n";
+    }
     if ( yesno( 
             "$bootie_backtitleheader: Postconfiguration stage",
             "xorg$tit graphics driver configuration finished.\\n",
-            $xmsg . "\\n" . $finalmsg  . "\\nIf you want to start X Window now, just hit \"Enter\".\\nIf you do not want to start X now, please choose \"No\". You can then start X Window later yourself using the \"startx\" command.",
+            $xmsg . "\\n" . $finalmsg  . $kmsg . "\\nIf you want to start X Window now, just hit \"Enter\".\\nIf you do not want to start X now, please choose \"No\". You can then start X Window later yourself using the \"startx\" command.",
             '15 72')) {
         # yes, start xorg
         if (defined $kmssurprise) {
@@ -10752,6 +11082,33 @@ sub do_skunkosxinstallconfigx
     # installation redo from this stage
     checkcleanbe();
 
+if (1) {
+    # TODO check whether this is the correct approach:
+    # it is hyper-annoying when pkg aborts installation with message:
+    # "pkg cannot get advisory lock on database it is locked by another process"
+    # see
+    #   https://forums.freebsd.org/threads/pkg-problem.56297/
+    #   https://forums.freebsd.org/threads/process-with-pid-49-still-holds-the-lock.79543/
+    # and it does not even display a PID, just aborts a long install.
+    # Maybe this is helpful too:
+    #   https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=232350
+    # so maybe following comment #7 might work around:
+    #   https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=232350 :
+    #       If have set:
+    #           /usr/local/etc/pkg.conf
+    #
+    #           LOCK_WAIT = 100;
+    #           LOCK_RETRIES = 100;
+    #
+    #       makes  it better, but does not solve it.
+    #
+    # maybe the solution in comments #16-20 is better?
+    # or turning off periodic pkg audit etc crap completely?
+    $cmd .= "$sysmod /usr/local/etc/pkg.conf 'LOCK_WAIT = 100;' none\n";
+    $cmd .= "$sysmod /usr/local/etc/pkg.conf 'LOCK_RETRIES = 100;' none\n";
+    executer( $cmd);
+    $cmd = '';
+}
     # find out install stage and jump accordingly
     # just to avoid misunderstandings: the $inststg tells which 
     # stage(s) have already been *finished*.

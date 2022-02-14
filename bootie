@@ -181,7 +181,7 @@ my $console_history_size = '5000';
 
 ####################    constants
 my $myname = 'bootie';
-my $myversion = '0.0.3';
+my $myversion = '0.0.4';
 my $executerlogfile = "/var/log/$myname.log";
 my $tmpfile = "/tmp/$myname.tmp";
 my $tmpfile2 = "/tmp/$myname.tmp2";
@@ -7362,12 +7362,22 @@ sub vgadetect
                     if ($modeset == 1) {
                         # does only work when in /boot/loader.conf
                         # if in /etc/rc.conf, suspend/resume tends to fail
-                        ${$vga}{$vgaind}{$drivercount}{$key_bootloaderconf}{'1'} = 'nvidia-modeset_load="YES"';
+                        # but on UEFI there is hang if loaded in /boot/loader.conf
+                        # see https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=254069
+                        if ($system_isuefi) {
+                            ${$vga}{$vgaind}{$drivercount}{$key_kldlist}{'1'} = 'nvidia-modeset';
+                        } else {
+                            ${$vga}{$vgaind}{$drivercount}{$key_bootloaderconf}{'1'} = 'nvidia-modeset_load="YES"';
+                        }
                         # nvidia-modeset alone seems to suffice
 #                         ${$vga}{$vgaind}{$drivercount}{$key_bootloaderconf}{'2'} = 'nvidia_load="YES"';
                         ${$vga}{$vgaind}{$drivercount}{$key_runonce}{'1'} = '[0 1]kldload -nv nvidia-modeset';
                     } else {
-                        ${$vga}{$vgaind}{$drivercount}{$key_bootloaderconf}{'1'} = 'nvidia_load="YES"';
+                        if ($system_isuefi) {
+                            ${$vga}{$vgaind}{$drivercount}{$key_kldlist}{'1'} = 'nvidia';
+                        } else {
+                            ${$vga}{$vgaind}{$drivercount}{$key_bootloaderconf}{'1'} = 'nvidia_load="YES"';
+                        }
                         ${$vga}{$vgaind}{$drivercount}{$key_runonce}{'1'} = '[0 1]kldload -nv nvidia';
                     }
                     if (${$pciid_nvidia}{$_}{$pciid}[$nvind_vdpau] ne '-') {
@@ -9245,6 +9255,36 @@ sub getkernelsrcandbuild
     $cmd .= "make installkernel KERNCONF=SKUNKOS\n";
 }
 
+
+# to avoid install breakage because of pkg check
+# we need to turn off the former temporarily
+# see https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=227952
+# and https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=232350 comments 16-20
+# TODO find out whether the change of the file /etc/periodic.conf
+# is sufficient or there needs to be done some action to reload
+# periodic config
+sub turnoffperiodicpkgcheck
+{
+    if (-e '/etc/periodic.conf') {
+        my $offcmd = "$sysmod /etc/periodic.conf security_status_pkgaudit_enable=NO none\n";
+        my $offcmd = "$sysmod /etc/periodic.conf security_status_pkgchecksum_enable=NO none\n";
+        executer( $offcmd);
+    } else {
+        my $perioconf = 
+q|security_status_pkgaudit_enable=NO
+security_status_pkgchecksum_enable=NO
+|;
+        die if write_a_file( '/etc/periodic.conf', \$perioconf);
+    }
+}
+
+sub turnonperiodicpkgcheck
+{
+    my $oncmd = "$sysmod /etc/periodic.conf security_status_pkgaudit_enable=YES none\n";
+    my $oncmd = "$sysmod /etc/periodic.conf security_status_pkgchecksum_enable=YES none\n";
+    executer( $oncmd);
+}
+
 ################################################################
 ####################################
 ####################################     install stage functions
@@ -9376,7 +9416,9 @@ sub do_skunkosbaseinstall
         if ($buildkernel) {
             getkernelsrcandbuild();
         }
+        turnoffperiodicpkgcheck();
         executer( $cmd);
+        turnonperiodicpkgcheck();
         $cmd = '';
     }
     
@@ -9441,7 +9483,10 @@ sub do_skunkosbaseinstall
     # land user where he/she/it belongs :)
     $cmd .= "cd /root\n";
     
+    turnoffperiodicpkgcheck();
     executer($cmd);
+    turnonperiodicpkgcheck();
+    
     $cmd = '';
 
     # ask whether one wants to install xorg
@@ -10355,7 +10400,9 @@ perm bpf* 0660
     $cmd .= "$pkginst sudo\n";
     $cmd .= "$sysmod /usr/local/etc/sudoers '$user1001 ALL = NOPASSWD: /usr/local/bin/xrandr /usr/sbin/acpiconf /usr/sbin/zzz' none\n";
 
+    turnoffperiodicpkgcheck();
     executer($cmd);
+    turnonperiodicpkgcheck();
     $cmd = '';
     
     #################################### postconfiguration 
@@ -10623,9 +10670,6 @@ kded5 &
     $xinitrcsoft .= $xinitrc_soft_end;
     $cmd .= "$writexinitrcsoft\n";
 
-    executer( $cmd);
-    $cmd = '';
-    
     
     
 # gnupg-2.3.3_2:
@@ -10653,7 +10697,11 @@ kded5 &
             logconsole( "Preparation for GnuPG: IPv6 available, no GnuPG workaround necessary.\n");
         }
     }
+
+    executer( $cmd);
+    $cmd = '';
     
+
     # some linux-ish ports want procfs and fdescfs
     # for example openjdk
     # these are hard-to-detect as they are by-installs etc 
